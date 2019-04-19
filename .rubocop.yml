@@ -5,3 +5,6 @@ Documentation:
 
 Metrics/LineLength:
   Max: 100
+
+Rails/HttpPositionalArguments:
+  Enabled: false
