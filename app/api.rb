@@ -2,10 +2,11 @@
 
 require 'sinatra/base'
 require 'json'
+require_relative 'ledger'
 
 module ExpenseTracker
   class API < Sinatra::Base
-    def initialize(ledger: Legder.new)
+    def initialize(ledger: Ledger.new)
       @ledger = ledger
       super()
     end
