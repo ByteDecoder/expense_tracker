@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative '../../../app/ledger'
-require_relative '../../../config/sequel'
 
 module ExpenseTracker
   RSpec.describe Ledger, :db do
@@ -35,7 +34,7 @@ module ExpenseTracker
 
           result = ledger.record(expense)
 
-          expect(result).to_not be_success
+          expect(result).not_to be_success
           expect(result.expense_id).to eq(nil)
           expect(result.error_message).to include('`payee` is required')
 
