@@ -6,7 +6,9 @@ git_source(:github) { |repo_name| "https://github.com/#{repo_name}" }
 
 ruby '2.6.3'
 
+gem 'sequel', '~> 5.19'
 gem 'sinatra', '~> 2.0', '>= 2.0.5'
+gem 'sqlite3', '~> 1.4'
 
 group :development, :test do
   gem 'byebug', '~> 11.0', '>= 11.0.1'
