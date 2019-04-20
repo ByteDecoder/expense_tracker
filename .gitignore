@@ -51,3 +51,6 @@ build-iPhoneSimulator/
 
 # Ignoring Sqlite databases
 db/development.db
+
+# Byebug
+.byebug_history

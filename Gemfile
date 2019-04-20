@@ -18,4 +18,5 @@ group :development, :test do
   gem 'rubocop', '~> 0.67.2'
   gem 'rubocop-performance', '~> 1.1'
   gem 'rubocop-rspec', '~> 1.32'
+  gem 'ox', '~> 2.10'
 end
