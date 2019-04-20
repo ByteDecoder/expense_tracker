@@ -91,7 +91,8 @@ RSpec.configure do |config|
   #   # order dependency and want to debug it, you can fix the order by providing
   #   # the seed, which is printed after each run.
   #   #     --seed 1234
-  #   config.order = :random
+  config.order = :random
+  config.bisect_runner = :shell
   #
   #   # Seed global randomization in this process using the `--seed` CLI option.
   #   # Setting this allows you to use `--seed` to deterministically reproduce
@@ -100,4 +101,7 @@ RSpec.configure do |config|
   #   Kernel.srand config.seed
 
   config.filter_gems_from_backtrace 'rack', 'rack-test', 'sequel', 'sinatra'
+  config.when_first_matching_example_defined(:db) do
+    require_relative 'support/db'
+  end
 end
