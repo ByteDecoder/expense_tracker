@@ -7,7 +7,7 @@ RSpec.configure do |config|
     DB[:expenses].truncate
 
     config.around(:example, :db) do |example|
-      DB.transaction(rollback: :rollback) { example.run }
+      DB.transaction(rollback: :always) { example.run }
     end
   end
 end
