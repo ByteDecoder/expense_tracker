@@ -2,6 +2,8 @@
 
 require_relative '../../../app/api'
 require 'rack/test'
+require 'ox'
+require 'byebug'
 
 module ExpenseTracker
   RSpec.describe API do
@@ -15,25 +17,45 @@ module ExpenseTracker
       JSON.parse(last_response.body)
     end
 
+    def xml_parsed
+      Ox.parse_obj(last_response.body)
+    end
+
     let(:ledger) { instance_double('ExpenseTracker::Ledger') }
 
     describe 'POST /expenses' do
       context 'when the expense is successfully recorded' do
-        let(:expense) { { 'some' => 'data' } }
+        let(:expense) do
+          {
+            'payee' => 'Starbucks',
+            'amount' => 5.75,
+            'date' => '2017-06-10'
+          }
+        end
 
         before do
           allow(ledger).to receive(:record).with(expense)
                                            .and_return(RecordResult.new(true, 417, nil))
         end
 
-        it 'returns the expense id' do
-          post '/expenses', JSON.generate(expense)
-          expect(json_parsed).to include('expense_id' => 417)
+        context 'with JSON format' do
+          it 'returns the expense id with HTTP 200 (OK)' do
+            header 'Content-Type', 'application/json'
+            post '/expenses', JSON.generate(expense)
+            expect(json_parsed).to include('expense_id' => 417)
+            expect(last_response.headers['Content-Type']).to eq('application/json')
+            expect(last_response.status).to eq(200)
+          end
         end
 
-        it 'responds with a 200 (OK)' do
-          post '/expenses', JSON.generate(expense)
-          expect(last_response.status).to eq(200)
+        context 'with XML format' do
+          it 'returns the expense id and HTTP 200 (OK)' do
+            header 'Content-Type', 'text/xml'
+            post '/expenses', Ox.dump(expense)
+            expect(xml_parsed).to include('expense_id' => 417)
+            expect(last_response.headers['Content-Type']).to include('text/xml')
+            expect(last_response.status).to eq(200)
+          end
         end
       end
 
