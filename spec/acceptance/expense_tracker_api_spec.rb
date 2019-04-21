@@ -14,6 +14,7 @@ module ExpenseTracker
     end
 
     def post_expense(expense)
+      header 'Content-Type', 'application/json'
       post '/expenses', JSON.generate(expense)
       expect(last_response.status).to eq(200)
 

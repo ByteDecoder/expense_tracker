@@ -22,29 +22,56 @@ module ExpenseTracker
     end
 
     let(:ledger) { instance_double('ExpenseTracker::Ledger') }
+    let(:expense) do
+      {
+        'payee' => 'Starbucks',
+        'amount' => 5.75,
+        'date' => '2017-06-10'
+      }
+    end
+
+    def assert_error_expense_response(error_message, mime_type = 'application/json')
+      expect(json_parsed).to include('error' => error_message) if mime_type == 'application/json'
+      expect(xml_parsed).to include('error' => error_message) if mime_type == 'text/xml'
+      expect(last_response.headers['Content-Type']).to eq(mime_type)
+      expect(last_response.status).to eq(422)
+    end
+
+    def assert_expense_response(expense_id, mime_type = 'application/json')
+      expect(json_parsed).to include('expense_id' => expense_id) if mime_type == 'application/json'
+      expect(xml_parsed).to include('expense_id' => expense_id) if mime_type == 'text/xml'
+      expect(last_response.headers['Content-Type']).to eq(mime_type)
+      expect(last_response.status).to eq(200)
+    end
 
     describe 'POST /expenses' do
       context 'when the expense is successfully recorded' do
-        let(:expense) do
-          {
-            'payee' => 'Starbucks',
-            'amount' => 5.75,
-            'date' => '2017-06-10'
-          }
-        end
-
         before do
           allow(ledger).to receive(:record).with(expense)
                                            .and_return(RecordResult.new(true, 417, nil))
+        end
+
+        context 'with supported format but invalid expense payload format' do
+          it 'returns an error message and responds with a 422 (Unprocessable entity)' do
+            header 'Content-Type', 'application/json'
+            post '/expenses', Ox.dump(expense)
+            assert_error_expense_response('Expense payload does not match the format advertised')
+          end
+        end
+
+        context 'with Unsupported format' do
+          it 'returns an error message and responds with a 422 (Unprocessable entity)' do
+            header 'Content-Type', 'application/json203'
+            post '/expenses', JSON.generate(expense)
+            assert_error_expense_response('Unsupported format')
+          end
         end
 
         context 'with JSON format' do
           it 'returns the expense id with HTTP 200 (OK)' do
             header 'Content-Type', 'application/json'
             post '/expenses', JSON.generate(expense)
-            expect(json_parsed).to include('expense_id' => 417)
-            expect(last_response.headers['Content-Type']).to eq('application/json')
-            expect(last_response.status).to eq(200)
+            assert_expense_response(417)
           end
         end
 
@@ -52,30 +79,32 @@ module ExpenseTracker
           it 'returns the expense id and HTTP 200 (OK)' do
             header 'Content-Type', 'text/xml'
             post '/expenses', Ox.dump(expense)
-            expect(xml_parsed).to include('expense_id' => 417)
-            expect(last_response.headers['Content-Type']).to include('text/xml')
-            expect(last_response.status).to eq(200)
+            assert_expense_response(417, 'text/xml')
           end
         end
       end
 
       context 'when the expense fails validation' do
-        let(:expense) { { 'some' => 'data' } }
-
         before do
           allow(ledger).to receive(:record)
             .with(expense)
             .and_return(RecordResult.new(false, 417, 'Expense incomplete'))
         end
 
-        it 'returns an error message' do
-          post '/expenses', JSON.generate(expense)
-          expect(json_parsed).to include('error' => 'Expense incomplete')
+        context 'with JSON format' do
+          it 'returns an error message and responds with a 422 (Unprocessable entity)' do
+            header 'Content-Type', 'application/json'
+            post '/expenses', JSON.generate(expense)
+            assert_error_expense_response('Expense incomplete')
+          end
         end
 
-        it 'responds with a 422 (Unprocessable entity)' do
-          post '/expenses', JSON.generate(expense)
-          expect(last_response.status).to eq(422)
+        context 'with XML format' do
+          it 'returns an error message and responds with a 422 (Unprocessable entity)' do
+            header 'Content-Type', 'text/xml'
+            post '/expenses', Ox.dump(expense)
+            assert_error_expense_response('Expense incomplete', 'text/xml')
+          end
         end
       end
     end

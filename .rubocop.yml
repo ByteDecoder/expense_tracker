@@ -10,3 +10,6 @@ Metrics/LineLength:
 
 Rails/HttpPositionalArguments:
   Enabled: false
+
+RSpec/MultipleExpectations:
+  Enabled: false
