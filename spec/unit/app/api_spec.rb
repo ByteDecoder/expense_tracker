@@ -116,14 +116,31 @@ module ExpenseTracker
                                                 .and_return(%w[expense_1 expense_2])
         end
 
-        it 'returns the expense records as JSON' do
-          get 'expenses/2017-06-12'
-          expect(json_parsed).to eq(%w[expense_1 expense_2])
+        context 'with unsupported format' do
+          it 'returns an error message and responds with a 422 (Unprocessable entity)' do
+            header 'Content-Type', 'text/xml1'
+            get 'expenses/2017-06-12'
+            expect(json_parsed).to include('error' => 'Unsupported format')
+            expect(last_response.status).to eq(422)
+          end
         end
 
-        it 'respond with a 200 (OK)' do
-          get '/expenses/2017-06-12'
-          expect(last_response.status).to eq(200)
+        context 'with JSON format' do
+          it 'returns the expense records as JSON and respond with a 200 (OK)' do
+            header 'Content-Type', 'application/json'
+            get 'expenses/2017-06-12'
+            expect(json_parsed).to eq(%w[expense_1 expense_2])
+            expect(last_response.status).to eq(200)
+          end
+        end
+
+        context 'with XML format' do
+          it 'returns the expense records as XML and respond with a 200 (OK)' do
+            header 'Content-Type', 'text/xml'
+            get 'expenses/2017-06-12'
+            expect(xml_parsed).to eq(%w[expense_1 expense_2])
+            expect(last_response.status).to eq(200)
+          end
         end
       end
 
@@ -133,14 +150,22 @@ module ExpenseTracker
                                                 .and_return([])
         end
 
-        it 'returns an empty array as JSON' do
-          get 'expenses/2017-06-12'
-          expect(json_parsed).to eq([])
+        context 'with JSON format' do
+          it 'returns an empty array as JSON' do
+            header 'Content-Type', 'application/json'
+            get 'expenses/2017-06-12'
+            expect(json_parsed).to eq([])
+            expect(last_response.status).to eq(200)
+          end
         end
 
-        it 'respond with a 200 (OK)' do
-          get 'expenses/2017-06-12'
-          expect(last_response.status).to eq(200)
+        context 'with XML format' do
+          it 'returns an empty array as XML' do
+            header 'Content-Type', 'text/xml'
+            get 'expenses/2017-06-12'
+            expect(xml_parsed).to eq([])
+            expect(last_response.status).to eq(200)
+          end
         end
       end
     end

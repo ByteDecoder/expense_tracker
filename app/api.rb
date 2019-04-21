@@ -3,6 +3,7 @@
 require 'sinatra/base'
 require 'json'
 require_relative 'ledger'
+require 'byebug'
 
 module ExpenseTracker
   class API < Sinatra::Base
@@ -18,13 +19,16 @@ module ExpenseTracker
       return render_payload_unsupported_format if expense.nil?
 
       result = @ledger.record(expense)
-      return render_success(result, request.media_type) if result.success?
+      return render_expense_success(result, request.media_type) if result.success?
 
       render_unprocessable_entity(result.error_message, request.media_type)
     end
 
     get '/expenses/:date' do
-      JSON.generate(@ledger.expenses_on(params[:date]))
+      return render_unsupported_format unless valid_mime_type?
+
+      expenses = @ledger.expenses_on(params[:date])
+      render_expenses_success(expenses, request.media_type)
     end
 
     private
@@ -41,7 +45,15 @@ module ExpenseTracker
       request.media_type == 'application/json' || request.media_type == 'text/xml'
     end
 
-    def render_success(result, mime_type = 'application/json')
+    def render_expenses_success(expenses, mime_type = 'application/json')
+      status 200
+      headers['Content-Type'] = mime_type
+      return JSON.generate(expenses) if mime_type == 'application/json'
+
+      Ox.dump(expenses)
+    end
+
+    def render_expense_success(result, mime_type = 'application/json')
       status 200
       headers['Content-Type'] = mime_type
       return JSON.generate('expense_id' => result.expense_id) if mime_type == 'application/json'
