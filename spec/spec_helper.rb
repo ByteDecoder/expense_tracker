@@ -104,4 +104,8 @@ RSpec.configure do |config|
   config.when_first_matching_example_defined(:db) do
     require_relative 'support/db'
   end
+
+  config.define_derived_metadata do |meta|
+    meta[:aggregate_failures] = true
+  end
 end

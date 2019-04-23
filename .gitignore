@@ -54,3 +54,6 @@ db/development.db
 
 # Byebug
 .byebug_history
+
+# Log files
+log/
